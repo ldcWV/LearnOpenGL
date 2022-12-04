@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set(SOURCES
     src/main.cpp
+    src/Shader.cpp
 )
 
 find_package( OpenGL REQUIRED )
@@ -39,5 +40,6 @@ if( MSVC )
     endif()
 endif()
 
+target_compile_definitions(${PROJECT_NAME} PUBLIC SRC_DIR="${CMAKE_CURRENT_SOURCE_DIR}/src/")
 target_compile_definitions(${PROJECT_NAME} PUBLIC SCENE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/scenes/")
 target_compile_definitions(${PROJECT_NAME} PUBLIC REPLAY_DIR="${CMAKE_CURRENT_SOURCE_DIR}/replays/")
