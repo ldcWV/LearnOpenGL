@@ -5,6 +5,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include "Camera.hpp"
+
+Camera camera(glm::vec3(0.f, 0.f, 3.f));
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -14,6 +19,47 @@ void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        camera.processKeyboard(CameraMovement::FORWARD, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        camera.processKeyboard(CameraMovement::BACKWARD, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        camera.processKeyboard(CameraMovement::LEFT, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        camera.processKeyboard(CameraMovement::RIGHT, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+        camera.processKeyboard(CameraMovement::UP, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+        camera.processKeyboard(CameraMovement::DOWN, deltaTime);
+    }
+}
+
+void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
+    static bool firstMouse = true;
+    static double lastX = 0, lastY = 0;
+
+    if (firstMouse) {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    float xoffset = float(xpos - lastX);
+    float yoffset = float(lastY - ypos);
+    camera.processMouseMovement(xoffset, yoffset, true);
+
+    lastX = xpos;
+    lastY = ypos;
+}
+
+void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
+    camera.processMouseScroll((float)yoffset);
 }
 
 int main() {
@@ -36,13 +82,9 @@ int main() {
 
     glViewport(0, 0, 800, 600);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); 
-
-    // float vertices[] = {
-    //     -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
-    //      0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-    //      0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
-    //     -0.5f,  0.5f, 0.0f, 1.1f, 1.1f, 0.0f
-    // };
+    glfwSetCursorPosCallback(window, mouseCallback);
+    glfwSetScrollCallback(window, scrollCallback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     float vertices[] = {
         -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
@@ -116,9 +158,8 @@ int main() {
         shader.use();
         glBindVertexArray(VAO);
 
-        glm::mat4 view(1.f);
-        view = glm::translate(view, glm::vec3(0.f, 0.f, -3.f));
-        glm::mat4 projection = glm::perspective(glm::radians(45.f), 800.f/600.f, 0.1f, 100.f);
+        glm::mat4 view = camera.getViewMatrix();
+        glm::mat4 projection = glm::perspective(glm::radians(camera.FOV), 800.f/600.f, 0.1f, 100.f);
 
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
@@ -134,6 +175,10 @@ int main() {
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
     }
 
     glfwTerminate();

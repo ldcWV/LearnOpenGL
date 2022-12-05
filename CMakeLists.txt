@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(SOURCES
     src/main.cpp
     src/Shader.cpp
+    src/Camera.cpp
 )
 
 find_package( OpenGL REQUIRED )
