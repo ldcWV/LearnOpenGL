@@ -2,6 +2,9 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include "Shader.hpp"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -37,11 +40,13 @@ int main() {
     float vertices[] = {
         -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
          0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-         0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f
+         0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
+        -0.5f,  0.5f, 0.0f, 1.1f, 1.1f, 0.0f
     };
 
     unsigned int indices[] = {
-        0, 1, 2
+        0, 1, 2,
+        0, 2, 3
     };
 
     GLuint VAO;
@@ -58,14 +63,14 @@ int main() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    std::string vShaderPath = std::string(SRC_DIR) + "shader.vert";
-    std::string fShaderPath = std::string(SRC_DIR) + "shader.frag";
-    Shader shader(vShaderPath.c_str(), fShaderPath.c_str());
-
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)0);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
+
+    std::string vShaderPath = std::string(SRC_DIR) + "shader.vert";
+    std::string fShaderPath = std::string(SRC_DIR) + "shader.frag";
+    Shader shader(vShaderPath.c_str(), fShaderPath.c_str());
 
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
@@ -74,6 +79,13 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
         shader.use();
         glBindVertexArray(VAO);
+
+        glm::mat4 trans(1.f);
+        trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
+        trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+        GLuint transformLoc = glGetUniformLocation(shader.ID, "transform");
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
