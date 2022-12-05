@@ -37,16 +37,37 @@ int main() {
     glViewport(0, 0, 800, 600);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); 
 
+    // float vertices[] = {
+    //     -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
+    //      0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
+    //      0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
+    //     -0.5f,  0.5f, 0.0f, 1.1f, 1.1f, 0.0f
+    // };
+
     float vertices[] = {
-        -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
-         0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-         0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
-        -0.5f,  0.5f, 0.0f, 1.1f, 1.1f, 0.0f
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 1.0f,
+         0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f
     };
 
     unsigned int indices[] = {
-        0, 1, 2,
-        0, 2, 3
+        0, 1, 2, // bottom
+        0, 2, 3,
+        0, 1, 5, // front
+        0, 4, 5,
+        1, 5, 6, // right
+        1, 2, 6,
+        2, 3, 6, // back
+        3, 6, 7,
+        0, 3, 7, // left
+        0, 4, 7,
+        4, 5, 6, // top
+        4, 6, 7
     };
 
     GLuint VAO;
@@ -72,21 +93,44 @@ int main() {
     std::string fShaderPath = std::string(SRC_DIR) + "shader.frag";
     Shader shader(vShaderPath.c_str(), fShaderPath.c_str());
 
+    glEnable(GL_DEPTH_TEST);
+
+    glm::vec3 cubePositions[] = {
+        glm::vec3( 0.0f,  0.0f,  0.0f), 
+        glm::vec3( 2.0f,  5.0f, -15.0f), 
+        glm::vec3(-1.5f, -2.2f, -2.5f),  
+        glm::vec3(-3.8f, -2.0f, -12.3f),  
+        glm::vec3( 2.4f, -0.4f, -3.5f),  
+        glm::vec3(-1.7f,  3.0f, -7.5f),  
+        glm::vec3( 1.3f, -2.0f, -2.5f),  
+        glm::vec3( 1.5f,  2.0f, -2.5f), 
+        glm::vec3( 1.5f,  0.2f, -1.5f), 
+        glm::vec3(-1.3f,  1.0f, -1.5f)  
+    };
+
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         shader.use();
         glBindVertexArray(VAO);
 
-        glm::mat4 trans(1.f);
-        trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
-        trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-        GLuint transformLoc = glGetUniformLocation(shader.ID, "transform");
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+        glm::mat4 view(1.f);
+        view = glm::translate(view, glm::vec3(0.f, 0.f, -3.f));
+        glm::mat4 projection = glm::perspective(glm::radians(45.f), 800.f/600.f, 0.1f, 100.f);
 
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        shader.setMat4("view", view);
+        shader.setMat4("projection", projection);
+
+        for (int i = 0; i < 10; i++) {
+            glm::mat4 model(1.f);
+            model = glm::translate(model, cubePositions[i]);
+            float angle = glm::radians(20.f * i) + glm::radians(50.f) * glfwGetTime();
+            model = glm::rotate(model, angle, glm::vec3(1.0f, 0.3f, 0.5f));
+            shader.setMat4("model", model);
+            glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();
