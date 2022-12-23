@@ -126,13 +126,14 @@ int main() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(3 * sizeof(float)));
 
     std::string vShaderPath = std::string(SRC_DIR) + "shader.vert";
     std::string fShaderPath = std::string(SRC_DIR) + "shader.frag";
+    std::cout << vShaderPath << " " << fShaderPath << std::endl;
     Shader shader(vShaderPath.c_str(), fShaderPath.c_str());
 
     glEnable(GL_DEPTH_TEST);
